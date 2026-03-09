@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+import bcrypt from "bcryptjs";
 const userSchema = new mongoose.Schema(
   {
     fullName: {
@@ -50,8 +50,10 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-const User = mongoose.model("User", userSchema);
+/*runs just before a user is saved to db
+   password will be encrypted*/
 userSchema.pre("save", async function (next) {
+  //if password is not modified
   if (!this.isModified("password")) return next();
 
   try {
@@ -62,4 +64,13 @@ userSchema.pre("save", async function (next) {
     next(error);
   }
 });
+
+userSchema.methods.matchPassword = async function (enterPassword) {
+  const isPasswordCorrect = await bcrypt.compare(enterPassword, this.password);
+
+  return isPasswordCorrect;
+};
+
+const User = mongoose.model("User", userSchema);
+
 export default User;
